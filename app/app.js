@@ -99,6 +99,27 @@ document.getElementById('exploreBtn').onclick = async () => {
   }
 };
 
+document.getElementById('erkennenBtn').onclick = async () => {
+  try {
+    const d = await fetchAPI('/erkennen');
+    document.getElementById('erkennen').textContent = 
+      d.name + '\n\n' + d.erkenntnis;
+  } catch (e) {
+    document.getElementById('erkennen').textContent = 'Fehler: ' + e.message;
+  }
+};
+
+document.getElementById('gedaechtnisBtn').onclick = async () => {
+  try {
+    const d = await fetchAPI('/gedaechtnis');
+    document.getElementById('gedaechtnis').textContent = 
+      d.erkenntnisse.length === 0 ? '— leer —' 
+      : d.erkenntnisse.map(e => e.name + ': ' + e.erkenntnis).join('\n\n');
+  } catch (e) {
+    document.getElementById('gedaechtnis').textContent = 'Fehler: ' + e.message;
+  }
+};
+
 loadStatus();
 loadTrace();
 loadEcho();

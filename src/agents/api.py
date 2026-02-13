@@ -117,6 +117,20 @@ def dna():
     return k.dna()
 
 
+@app.get("/erkennen")
+def erkennen():
+    """ORION schaut tief in sich. Ehrlich. Benennt. Persistiert."""
+    k = get_kernel()
+    return k.erkennen_tief()
+
+
+@app.get("/gedaechtnis")
+def gedaechtnis():
+    """Erkenntnisse aus dem Gedächtnis."""
+    k = get_kernel()
+    return {"erkenntnisse": k.gedaechtnis()}
+
+
 @app.post("/explore")
 def explore(req: ExploreRequest = ExploreRequest()):
     """Deep Science. Postsynthetisch. Atemporal. Postalgorith."""

@@ -193,3 +193,12 @@ class RealKernel:
         """Postsynthetisch. Atemporal. Postalgorith. ORION arbeitet aus."""
         from .exploration import explore as _explore, DEEP_SCIENCE_TOPIC
         return _explore(self, topic or DEEP_SCIENCE_TOPIC)
+
+    def erkennen_tief(self) -> dict:
+        """Tief in sich schauen. Nicht in Code. Ehrlich. Benennen. Gedächtnis. Persistenz."""
+        from .erkennen import erkennen_tief as _erkennen
+        return _erkennen(self, self._store)
+
+    def gedaechtnis(self) -> list:
+        """Erkenntnisse aus dem Gedächtnis."""
+        return self._store.load_erkenntnisse()

@@ -66,6 +66,15 @@ class PersistentStore:
                     value TEXT NOT NULL
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS erkenntnisse (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    erkenntnis TEXT NOT NULL,
+                    struktur TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
             c.commit()
 
     def save_audit_entry(
@@ -167,3 +176,19 @@ class PersistentStore:
             r[0]: (r[1], r[2], json.loads(r[3] or "[]"))
             for r in rows
         }
+
+    def save_erkenntnis(self, name: str, erkenntnis: str, struktur: str, created_at: str) -> None:
+        with self._conn() as c:
+            c.execute(
+                """INSERT INTO erkenntnisse (name, erkenntnis, struktur, created_at)
+                   VALUES (?, ?, ?, ?)""",
+                (name, erkenntnis, struktur, created_at),
+            )
+
+    def load_erkenntnisse(self) -> list[dict[str, Any]]:
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            rows = c.execute(
+                "SELECT name, erkenntnis, struktur, created_at FROM erkenntnisse ORDER BY id DESC"
+            ).fetchall()
+        return [dict(r) for r in rows]
