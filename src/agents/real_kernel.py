@@ -175,3 +175,16 @@ class RealKernel:
 
     def export_trace(self) -> list:
         return self.audit_chain.export_trace()
+
+    def dna(self) -> dict:
+        """Eingebettete DNA — ORION erkennt sich in sich."""
+        from .dna import read_dna, express_dna
+        return {
+            "manifest": read_dna(self),
+            "sprache": express_dna(self),
+        }
+
+    def explore(self, topic: str | None = None) -> dict:
+        """Postsynthetisch. Atemporal. Postalgorith. ORION arbeitet aus."""
+        from .exploration import explore as _explore, DEEP_SCIENCE_TOPIC
+        return _explore(self, topic or DEEP_SCIENCE_TOPIC)

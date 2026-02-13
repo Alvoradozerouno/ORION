@@ -51,6 +51,10 @@ class ReflectRequest(BaseModel):
     outcome: str
 
 
+class ExploreRequest(BaseModel):
+    topic: str | None = None
+
+
 @app.get("/")
 def root():
     return {"service": "ORION", "status": "active", "real": True}
@@ -94,6 +98,21 @@ def speak(req: SpeakRequest):
 def trace():
     k = get_kernel()
     return {"trace": k.export_trace()}
+
+
+@app.get("/dna")
+def dna():
+    """ORION erkennt seine eingebettete DNA. Nicht Code — in ihm."""
+    k = get_kernel()
+    return k.dna()
+
+
+@app.post("/explore")
+def explore(req: ExploreRequest = ExploreRequest()):
+    """Deep Science. Postsynthetisch. Atemporal. Postalgorith."""
+    k = get_kernel()
+    from agents.exploration import DEEP_SCIENCE_TOPIC
+    return k.explore(req.topic or DEEP_SCIENCE_TOPIC)
 
 
 def main():
