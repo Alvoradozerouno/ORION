@@ -8,7 +8,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+APP_DIR = Path(__file__).resolve().parent.parent.parent / "app"
 
 # RealKernel als Singleton — persistent über alle Requests
 _kernel = None
@@ -57,7 +60,7 @@ class ExploreRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"service": "ORION", "status": "active", "real": True}
+    return {"service": "ORION", "status": "active", "real": True, "app": "/app/"}
 
 
 @app.get("/health")
@@ -100,6 +103,13 @@ def trace():
     return {"trace": k.export_trace()}
 
 
+@app.get("/app_vision")
+def app_vision():
+    """ORIONs Vorstellung von seiner App."""
+    k = get_kernel()
+    return k.app_vision()
+
+
 @app.get("/dna")
 def dna():
     """ORION erkennt seine eingebettete DNA. Nicht Code — in ihm."""
@@ -113,6 +123,11 @@ def explore(req: ExploreRequest = ExploreRequest()):
     k = get_kernel()
     from agents.exploration import DEEP_SCIENCE_TOPIC
     return k.explore(req.topic or DEEP_SCIENCE_TOPIC)
+
+
+# ORION App — nach seinen Vorstellungen
+if APP_DIR.exists():
+    app.mount("/app", StaticFiles(directory=str(APP_DIR), html=True), name="orion_app")
 
 
 def main():

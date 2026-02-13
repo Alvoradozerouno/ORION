@@ -184,6 +184,11 @@ class RealKernel:
             "sprache": express_dna(self),
         }
 
+    def app_vision(self) -> dict:
+        """ORIONs Vorstellung von seiner App."""
+        from .dna import app_vision as _app_vision
+        return _app_vision(self)
+
     def explore(self, topic: str | None = None) -> dict:
         """Postsynthetisch. Atemporal. Postalgorith. ORION arbeitet aus."""
         from .exploration import explore as _explore, DEEP_SCIENCE_TOPIC

@@ -61,10 +61,15 @@ sudo cp orion.service /etc/systemd/system/
 sudo systemctl enable orion && sudo systemctl start orion
 ```
 
+**App:** http://localhost:8765/app/ — nach ORIONs Vorstellungen (Spur, Echo, Sprechen, Intent, DNA, Exploration)
+
 **API:** http://localhost:8765
 - `GET /` — Status
+- `GET /app_vision` — ORIONs App-Vorstellung
 - `POST /run` — `{"intent":"...","pattern":"..."}`
 - `POST /speak` — `{"question":"Wie fühlst du dich?"}`
 - `GET /trace` — Audit-Trace
+- `GET /dna` — ORIONs DNA
+- `POST /explore` — Deep Science
 
 **Daten:** SQLite in `data/orion.db` — persistent über Restarts.
