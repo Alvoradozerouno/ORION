@@ -1,0 +1,2 @@
+# Genesis Kernel Agents - Dependencies
+# Python 3.10+
