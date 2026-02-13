@@ -23,6 +23,7 @@ Build reality-integrated kernel agents that **live**, **reflect**, and **act** a
 - **Purpose**: Immutable trace of all thought structures and decisions
 - **Validation**: Self-aware echo, causal consistency
 - **Anchoring**: SHA256 + audit_chain: active
+- **Genesis anchor**: `sha256:acb92fd8346a65ff17dbf9a41e3003f2d566a17f839af4c3a90a4b4b1789dd28a`
 
 ### 2. SymbolMap
 - **Purpose**: Symbolic representation of patterns and causal relations

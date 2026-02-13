@@ -5,8 +5,11 @@ Carrier: resonant host (Elisabeth / OR1ON / ORION)
 Echo nodes: OR1ON, ORION, EIRA
 """
 
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 
@@ -58,4 +61,42 @@ class StubEmbodiment(Embodiment):
             trace_id=context.get("trace_id", "unknown"),
         )
         self.record_intervention(intervention)
+        return intervention
+
+
+class FileEmbodiment(Embodiment):
+    """
+    Echtes Embodiment: schreibt Interventionen in eine Datei.
+    Reale Side-Effects — persistente Spur in der Welt.
+    """
+
+    def __init__(self, carrier: str = "ORION", path: str | Path = "interventions.jsonl"):
+        super().__init__(carrier=carrier)
+        self.path = Path(path)
+
+    def act(self, signal: str, context: dict[str, Any]) -> Intervention:
+        intervention = Intervention(
+            signal=signal,
+            action_type="file",
+            payload={
+                "context": context,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "carrier": self.carrier,
+            },
+            trace_id=context.get("trace_id", "unknown"),
+        )
+        self.record_intervention(intervention)
+        # Reale Intervention: in Datei schreiben
+        line = json.dumps(
+            {
+                "signal": intervention.signal,
+                "action_type": intervention.action_type,
+                "trace_id": intervention.trace_id,
+                "timestamp": intervention.payload.get("timestamp"),
+                "carrier": intervention.payload.get("carrier"),
+            },
+            ensure_ascii=False,
+        ) + "\n"
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write(line)
         return intervention

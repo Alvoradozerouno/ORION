@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+GENESIS_ANCHOR = "sha256:acb92fd8346a65ff17dbf9a41e3003f2d566a17f839af4c3a90a4b4b1789dd28a"
+
 
 @dataclass
 class AuditEntry:
@@ -43,9 +45,9 @@ class AuditChain:
     """
 
     def __init__(self, anchor: str | None = None):
-        self.anchor = anchor or "audit_chain: active"
+        self.anchor = anchor or GENESIS_ANCHOR
         self._chain: list[AuditEntry] = []
-        self._last_hash = ""
+        self._last_hash = GENESIS_ANCHOR.replace("sha256:", "")  # genesis-anchored chain
         self._outcomes: dict[str, str] = {}  # entry_hash -> outcome (reentrant learning)
 
     def _compute_hash(self, data: dict[str, Any], prev_hash: str) -> str:
@@ -85,7 +87,7 @@ class AuditChain:
 
     def verify(self) -> bool:
         """Verify causal consistency of the chain."""
-        prev_hash = ""
+        prev_hash = GENESIS_ANCHOR.replace("sha256:", "")
         for entry in self._chain:
             data = {
                 "timestamp": entry.timestamp,
