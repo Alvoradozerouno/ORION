@@ -8,7 +8,10 @@ version = "0.1.0"
 description = "Kernel agents that live, reflect, and act as causally-aware entities"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "uvicorn[standard]>=0.24.0",
+    "fastapi>=0.104.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

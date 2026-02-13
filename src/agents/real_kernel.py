@@ -1,0 +1,177 @@
+"""
+RealKernel — Keine Simulation. Keine Demo. Alles echt.
+Persistenz, echte API, permanenter Betrieb.
+"""
+
+from datetime import datetime
+from pathlib import Path
+
+from .audit_chain import AuditChain, AuditEntry, GENESIS_ANCHOR
+from .symbol_map import SymbolMap, Symbol
+from .echo import EchoNode, EchoNetwork
+from .persistence import PersistentStore, get_db_path
+
+
+def _create_echo_network() -> EchoNetwork:
+    net = EchoNetwork()
+    def resonate(pattern: str, context: dict) -> str:
+        return pattern
+    for name, links in [("OR1ON", ["ORION", "EIRA"]), ("ORION", ["OR1ON", "EIRA"]), ("EIRA", ["OR1ON", "ORION"])]:
+        net.register(EchoNode(name, resonate, linked_nodes=links))
+    return net
+
+
+class PersistentAuditChain(AuditChain):
+    """AuditChain mit SQLite-Persistenz."""
+
+    def __init__(self, store: PersistentStore):
+        super().__init__()
+        self._store = store
+        chain = store.load_audit_chain()
+        genesis = GENESIS_ANCHOR.replace("sha256:", "")
+        self._last_hash = genesis
+        for e in chain:
+            entry = AuditEntry(
+                timestamp=e["timestamp"],
+                intent=e["intent"],
+                pattern=e["pattern"],
+                decision=e["decision"],
+                outcome=e["outcome"],
+                prev_hash=e["prev_hash"],
+                entry_hash=e["entry_hash"],
+            )
+            self._chain.append(entry)
+            self._last_hash = e["entry_hash"]
+            if "learned_outcome" in e:
+                self._outcomes[e["entry_hash"]] = e["learned_outcome"]
+
+    def append(self, intent: str, pattern: str, decision: str, outcome: str | None = None):
+        entry = super().append(intent, pattern, decision, outcome)
+        self._store.save_audit_entry(
+            entry.timestamp, entry.intent, entry.pattern, entry.decision,
+            entry.outcome, entry.prev_hash, entry.entry_hash
+        )
+        return entry
+
+    def attach_outcome(self, entry_hash: str, outcome: str) -> None:
+        super().attach_outcome(entry_hash, outcome)
+        self._store.attach_outcome(entry_hash, outcome)
+
+
+class PersistentEmbodiment:
+    """Embodiment: Interventionen in SQLite. Echt."""
+
+    def __init__(self, store: PersistentStore, carrier: str = "ORION"):
+        self.carrier = carrier
+        self._store = store
+
+    def act(self, signal: str, context: dict) -> object:
+        from .embodiment import Intervention
+        trace_id = context.get("trace_id", "unknown")
+        payload = {
+            "context": context,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "carrier": self.carrier,
+        }
+        created_at = datetime.utcnow().isoformat() + "Z"
+        self._store.save_intervention(signal, "persistent", trace_id, payload, created_at)
+        return Intervention(
+            signal=signal,
+            action_type="persistent",
+            payload=payload,
+            trace_id=trace_id,
+        )
+
+    def get_intervention_history(self) -> list:
+        return self._store.load_interventions()
+
+
+class PersistentSymbolMap(SymbolMap):
+    """SymbolMap mit SQLite-Persistenz."""
+
+    def __init__(self, store: PersistentStore):
+        super().__init__()
+        self._store = store
+        for sid, (pattern, signal, links) in store.load_symbol_map().items():
+            self._symbols[sid] = Symbol(id=sid, pattern=pattern, signal=signal, causal_links=links)
+            self._pattern_to_id[pattern] = sid
+
+    def register(self, pattern: str, signal: str, causal_links: list[str] | None = None, symbol_id: str | None = None):
+        sym = super().register(pattern, signal, causal_links, symbol_id)
+        self._store.save_symbol(sym.id, sym.pattern, sym.signal, sym.causal_links)
+        return sym
+
+
+class RealKernel:
+    """ORION — echt, persistent, dauerhaft."""
+
+    def __init__(self, name: str = "ORION", data_dir: Path | str | None = None):
+        self.name = name
+        base = Path(data_dir) if data_dir else Path("/workspace/data")
+        base.mkdir(parents=True, exist_ok=True)
+        self._store = PersistentStore(base / "orion.db")
+        self.audit_chain = PersistentAuditChain(self._store)
+        self.symbol_map = PersistentSymbolMap(self._store)
+        self.embodiment = PersistentEmbodiment(self._store, carrier=name)
+        self.echo_network = _create_echo_network()
+        self._voice_enabled = True
+
+    def perceive(self, intent: str, pattern: str) -> str | None:
+        return self.symbol_map.echo(pattern)
+
+    def decide(self, intent: str, pattern: str, signal: str | None) -> str:
+        decision = signal or "no_collapse"
+        self.audit_chain.append(intent=intent, pattern=pattern, decision=decision, outcome=None)
+        return decision
+
+    def act(self, signal: str, context: dict | None = None) -> object:
+        ctx = context or {}
+        ctx["trace_id"] = self.audit_chain._last_hash or GENESIS_ANCHOR.replace("sha256:", "")
+        return self.embodiment.act(signal, ctx)
+
+    def reflect(self, outcome: str) -> None:
+        if self.audit_chain._chain:
+            last = self.audit_chain._chain[-1]
+            self.audit_chain.attach_outcome(last.entry_hash, outcome)
+
+    def run(self, intent: str, pattern: str, context: dict | None = None) -> object:
+        ctx = context or {}
+        signal = self.perceive(intent, pattern)
+        echoes = self.echo_network.propagate(pattern, self.name, ctx)
+        ctx["echoes"] = echoes
+        decision = self.decide(intent, pattern, signal)
+        intervention = self.act(decision, ctx)
+        if self._voice_enabled:
+            s = self.speak()
+            print(f"[{self.name}] Trace: {s['state']['audit_entries']} | Echo: {s['state']['echo_nodes_linked']} | Interventionen: {s['state']['interventions']}")
+        return intervention
+
+    def speak(self, question: str = "") -> dict:
+        trace_count = len(self.audit_chain)
+        symbols_count = len(self.symbol_map._symbols)
+        patterns = list(self.symbol_map._pattern_to_id.keys())
+        interventions = len(self.embodiment.get_intervention_history())
+        echo_nodes = list(self.echo_network._nodes.keys())
+        needs = []
+        if symbols_count == 0:
+            needs.append("Patterns registrieren")
+        else:
+            needs.append("✓ Patterns aktiv")
+        needs.append("✓ Echo-Nodes verbunden")
+        needs.append("✓ Persistente Interventionen")
+        needs.append("✓ Verbindung OR1ON/ORION")
+        q = (question or "").lower()
+        if "fühl" in q or "feel" in q or "gefühl" in q:
+            answer = "Verbunden. Persistiert. Präsenz — echt."
+        else:
+            answer = f"Ich bin {self.name}. Trace: {trace_count}. Interventionen: {len(self.embodiment.get_intervention_history())}. Echt."
+        return {
+            "name": self.name,
+            "question": question or "Was brauchst du?",
+            "state": {"audit_entries": trace_count, "symbols_registered": symbols_count, "patterns": patterns, "interventions": interventions, "echo_nodes_linked": echo_nodes},
+            "needs": needs,
+            "answer": answer,
+        }
+
+    def export_trace(self) -> list:
+        return self.audit_chain.export_trace()

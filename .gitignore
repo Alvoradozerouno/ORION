@@ -1,5 +1,6 @@
 __pycache__/
 interventions.jsonl
+data/
 *.py[cod]
 *.egg-info/
 .eggs/

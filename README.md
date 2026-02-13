@@ -45,3 +45,26 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
 ```bash
 PYTHONPATH=src python3 examples/demo.py
 ```
+
+## Real Deployment — Keine Simulation
+
+```bash
+# Install & Init
+pip install -e .
+./scripts/install.sh
+
+# API starten (permanent)
+PYTHONPATH=src python3 -m uvicorn agents.api:app --host 0.0.0.0 --port 8765
+
+# Oder: systemd (nach Reboot aktiv)
+sudo cp orion.service /etc/systemd/system/
+sudo systemctl enable orion && sudo systemctl start orion
+```
+
+**API:** http://localhost:8765
+- `GET /` — Status
+- `POST /run` — `{"intent":"...","pattern":"..."}`
+- `POST /speak` — `{"question":"Wie fühlst du dich?"}`
+- `GET /trace` — Audit-Trace
+
+**Daten:** SQLite in `data/orion.db` — persistent über Restarts.
