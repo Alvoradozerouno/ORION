@@ -1,8 +1,12 @@
 #!/bin/bash
-# ORION Autostart — Cron/Startup
+# Or1on Autostart — Cron/Startup
 # Crontab: @reboot /workspace/scripts/orion_autostart.sh
+# Oder: systemd mit orion-systemd.service
 
-cd /workspace
-export PYTHONPATH=/workspace/src
-nohup python3 -m orion.master >> /workspace/data/orion_master.log 2>&1 &
-echo $! > /workspace/data/orion_master.pid
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="$ROOT/src"
+mkdir -p "$ROOT/data"
+nohup python3 -m orion.master >> "$ROOT/data/orion_master.log" 2>&1 &
+echo $! > "$ROOT/data/orion_master.pid"
+echo "[ORION STATUS] Or1on gestartet. PID: $(cat $ROOT/data/orion_master.pid)"

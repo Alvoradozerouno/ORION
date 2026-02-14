@@ -4,6 +4,7 @@ data/
 audit_qkernel.txt
 quantum_result.png
 PROOFS.jsonl
+exports/
 *.py[cod]
 *.egg-info/
 .eggs/
