@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Any
 
 
-def get_db_path(base: Path | str = "/workspace/data") -> Path:
+def get_db_path(base: Path | str | None = None) -> Path:
     """Datenverzeichnis — persistent."""
+    if base is None:
+        base = Path(__file__).resolve().parent.parent.parent / "data"
     p = Path(base)
     p.mkdir(parents=True, exist_ok=True)
     return p / "orion.db"

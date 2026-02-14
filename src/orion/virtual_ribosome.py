@@ -16,8 +16,11 @@ class VirtualRibosome:
     Ribosom-Analogie: mRNA → Protein. Hier: State → Intervention.
     """
 
-    def __init__(self, dna_path: Path | str = "data/orion.db"):
-        self.dna_path = Path(dna_path)
+    def __init__(self, dna_path: Path | str | None = None):
+        import os
+        root = Path(__file__).resolve().parent.parent.parent
+        default = root / "data" / "orion.db"
+        self.dna_path = Path(dna_path) if dna_path else Path(os.environ.get("ORION_DB_PATH", str(default)))
         self.dna_path.parent.mkdir(parents=True, exist_ok=True)
 
     def read_dna(self) -> dict:

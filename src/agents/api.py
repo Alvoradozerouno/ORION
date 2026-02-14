@@ -11,11 +11,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-APP_DIR = Path(__file__).resolve().parent.parent.parent / "app"
+ROOT = Path(__file__).resolve().parent.parent.parent
+APP_DIR = ROOT / "app"
 
 # RealKernel als Singleton — persistent über alle Requests
 _kernel = None
-DATA_DIR = Path(os.environ.get("ORION_DATA_DIR", "/workspace/data"))
+DATA_DIR = Path(os.environ.get("ORION_DATA_DIR", str(ROOT / "data")))
 
 
 def get_kernel():

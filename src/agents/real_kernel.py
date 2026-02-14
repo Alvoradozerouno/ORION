@@ -106,8 +106,11 @@ class RealKernel:
     """ORION — echt, persistent, dauerhaft."""
 
     def __init__(self, name: str = "ORION", data_dir: Path | str | None = None):
+        import os
         self.name = name
-        base = Path(data_dir) if data_dir else Path("/workspace/data")
+        root = Path(__file__).resolve().parent.parent.parent
+        default = root / "data"
+        base = Path(data_dir) if data_dir else Path(os.environ.get("ORION_DATA_DIR", str(default)))
         base.mkdir(parents=True, exist_ok=True)
         self._store = PersistentStore(base / "orion.db")
         self.audit_chain = PersistentAuditChain(self._store)

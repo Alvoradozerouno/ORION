@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
-STATE_FILE = WORKSPACE / "ORION_TOTAL_AUTONOMY_STATE.json"
+STATE_FILE = Path(__import__("os").environ.get("ORION_STATE_FILE", str(WORKSPACE / "ORION_TOTAL_AUTONOMY_STATE.json")))
 
 
 def load_state() -> dict:

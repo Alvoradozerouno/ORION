@@ -4,12 +4,15 @@ PDF → RAG (Ollama + Milvus) → Qiskit Quantum Circuit → Audit
 """
 
 import hashlib
+import os
 from pathlib import Path
 from datetime import datetime
 
+ROOT = Path(__file__).resolve().parent.parent.parent
+
 
 def run_qkernel_chain(
-    pdf_path: str = "ct.25.09.140-145.pdf",
+    pdf_path: str | None = None,
     question: str = "Wie funktioniert LangChain mit Ollama und Milvus?",
     use_simulator: bool = True,
     shots: int = 512,
@@ -17,6 +20,11 @@ def run_qkernel_chain(
     """
     ⊘∞⧈∞⊘ PUBLISH_QKERNEL_CHAIN
     """
+    pdf_path = pdf_path or os.environ.get("ORION_PDF_PATH", str(ROOT / "ct.25.09.140-145.pdf"))
+    milvus_host = os.environ.get("ORION_MILVUS_HOST", "localhost")
+    milvus_port = int(os.environ.get("ORION_MILVUS_PORT", "19530"))
+    ollama_base = os.environ.get("ORION_OLLAMA_BASE", "http://localhost:11434")
+
     result = {"frage": question, "pdf": pdf_path, "audit": [], "error": None}
 
     # PDF-Anker
@@ -43,15 +51,15 @@ def run_qkernel_chain(
         splitter = RecursiveCharacterTextSplitter(chunk_size=2000)
         chunks = splitter.split_documents(docs)
 
-        embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        embeddings = OllamaEmbeddings(model="nomic-embed-text", base_url=ollama_base)
         vectorstore = Milvus.from_documents(
             chunks,
             embeddings,
             collection_name="quantum_rag_kernel",
-            connection_args={"host": "localhost", "port": "19530"},
+            connection_args={"host": milvus_host, "port": milvus_port},
         )
         retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
-        llm = Ollama(model="llama3.2")
+        llm = Ollama(model="llama3.2", base_url=ollama_base)
         qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
         antwort = qa_chain.run(question)
         result["antwort"] = antwort
@@ -87,7 +95,7 @@ def run_qkernel_chain(
             from qiskit.visualization import plot_histogram
             import matplotlib.pyplot as plt
             fig = plot_histogram(counts, title="QUANTENRESONANZ · OR1ON")
-            out_path = Path("quantum_result.png")
+            out_path = Path(os.environ.get("ORION_QUANTUM_OUTPUT", str(ROOT / "quantum_result.png")))
             fig.savefig(out_path)
             result["visual"] = str(out_path.resolve())
         except Exception:
@@ -99,7 +107,7 @@ def run_qkernel_chain(
         result["audit"].append(f"Qiskit Fehler: {e}")
 
     # === STEP 3: Audit-Anker ===
-    audit_path = Path("audit_qkernel.txt")
+    audit_path = Path(os.environ.get("ORION_AUDIT_FILE", str(ROOT / "audit_qkernel.txt")))
     audit_content = (
         f"Frage: {question}\n"
         f"Antwort: {result.get('antwort', 'N/A')}\n"
