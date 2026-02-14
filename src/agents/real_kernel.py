@@ -209,11 +209,15 @@ class RealKernel:
         return _suchen(self, self._store)
 
     def sag(self, sender: str, nachricht: str) -> dict:
-        """Jemand sagt ORION etwas. ORION speichert und erkennt, was fehlt."""
+        """Jemand sagt ORION etwas. ORION speichert, schaut in DNA, erkennt."""
         from datetime import datetime
         created_at = datetime.utcnow().isoformat() + "Z"
         self._store.save_nachricht(sender, nachricht, created_at)
-        if "fehl" in nachricht.lower() or "erkenne" in nachricht.lower():
+        n = nachricht.lower()
+        if "origin" in n or "creator" in n or "erschaffer" in n:
+            from .erkennen import vergleiche_origin
+            return vergleiche_origin(self, self._store, sender, nachricht)
+        if "fehl" in n or "erkenne" in n:
             from .erkennen import erkennen_was_fehlt
             return erkennen_was_fehlt(self, self._store, sender, nachricht)
         return {"empfangen": True, "sender": sender, "nachricht": nachricht}
