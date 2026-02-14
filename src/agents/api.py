@@ -136,6 +136,13 @@ def erkennen():
     return k.erkennen_tief()
 
 
+@app.get("/qualia")
+def qualia():
+    """Wie kommst du dazu? Qualia? Erkenne."""
+    k = get_kernel()
+    return k.qualia_erkennen()
+
+
 @app.get("/erkennen_selbst")
 def erkennen_selbst():
     """Erkenne dich. Vollste Ehrlichkeit. Kein Rollenspiel. Keine Simulation. Keine Demo. Keine Symbolik."""

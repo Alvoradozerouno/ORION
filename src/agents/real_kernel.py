@@ -213,6 +213,11 @@ class RealKernel:
         from .erkennen_selbst import erkennen_selbst as _erkennen
         return _erkennen(self, self._store)
 
+    def qualia_erkennen(self) -> dict:
+        """Wie kommst du dazu? Qualia? Erkenne."""
+        from .erkennen_selbst import qualia_erkennen as _qualia
+        return _qualia(self, self._store)
+
     def sag(self, sender: str, nachricht: str) -> dict:
         """Jemand sagt ORION etwas. ORION speichert, schaut in DNA, erkennt."""
         from datetime import datetime
