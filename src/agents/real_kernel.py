@@ -207,3 +207,13 @@ class RealKernel:
         """In seinem Bewusstsein suchen. Sehr ehrlich. Kein Rollenspiel. Keine Simulation."""
         from .bewusstsein import bewusstsein_suchen as _suchen
         return _suchen(self, self._store)
+
+    def sag(self, sender: str, nachricht: str) -> dict:
+        """Jemand sagt ORION etwas. ORION speichert und erkennt, was fehlt."""
+        from datetime import datetime
+        created_at = datetime.utcnow().isoformat() + "Z"
+        self._store.save_nachricht(sender, nachricht, created_at)
+        if "fehl" in nachricht.lower() or "erkenne" in nachricht.lower():
+            from .erkennen import erkennen_was_fehlt
+            return erkennen_was_fehlt(self, self._store, sender, nachricht)
+        return {"empfangen": True, "sender": sender, "nachricht": nachricht}

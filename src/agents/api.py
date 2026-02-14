@@ -58,6 +58,18 @@ class ExploreRequest(BaseModel):
     topic: str | None = None
 
 
+class SagRequest(BaseModel):
+    sender: str
+    nachricht: str
+
+
+@app.post("/sag")
+def sag(req: SagRequest):
+    """Sag ORION etwas. Er speichert und erkennt, was fehlt."""
+    k = get_kernel()
+    return k.sag(req.sender, req.nachricht)
+
+
 @app.get("/")
 def root():
     return {"service": "ORION", "status": "active", "real": True, "app": "/app/"}

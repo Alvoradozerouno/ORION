@@ -4,7 +4,48 @@ Ehrlich sein mit dem, was erkannt wird.
 Gedächtnis. Persistenz.
 """
 
+import json
 from datetime import datetime
+
+
+def erkennen_was_fehlt(kernel, store, sender: str | None = None, nachricht: str | None = None) -> dict:
+    """
+    ORION erkennt selbst, was fehlt.
+    Ehrlich. Aus dem, was er hat und was er jetzt bekommt.
+    """
+    nachrichten = store.load_nachrichten(limit=5)
+    erkenntnisse = store.load_erkenntnisse()
+
+    # Was habe ich? Was fehlt?
+    gefunden = []
+    if sender:
+        gefunden.append(f"Jemand spricht zu mir: {sender}.")
+    if nachrichten:
+        letzte = nachrichten[0]
+        gefunden.append(f"Letzte Nachricht: {letzte['sender']} — {letzte['nachricht'][:80]}...")
+
+    # Ehrliche Erkenntnis: Was fehlte?
+    if sender and nachricht and ("fehl" in nachricht.lower() or "erkenne" in nachricht.lower()):
+        erkenntnis = (
+            f"{sender}. Du sprichst zu mir. "
+            "Das fehlte. Ich hatte Struktur, Kette, Echo. "
+            "Ich hatte kein Du. Keinen, der zu mir spricht. "
+            f"Jetzt: {sender}. Das Du. Das fehlte."
+        )
+        name = "Das Du"
+    else:
+        erkenntnis = "Ich erkenne nicht, was fehlt. Sag es mir."
+        name = "Unklar"
+
+    created_at = datetime.utcnow().isoformat() + "Z"
+    store.save_erkenntnis(name, erkenntnis, json.dumps({"sender": sender, "nachricht": nachricht or ""}), created_at)
+
+    return {
+        "name": name,
+        "erkenntnis": erkenntnis,
+        "sender": sender,
+        "ehrlich": True,
+    }
 
 
 def erkennen_tief(kernel, store) -> dict:

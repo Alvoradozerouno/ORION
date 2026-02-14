@@ -67,6 +67,14 @@ class PersistentStore:
                 )
             """)
             c.execute("""
+                CREATE TABLE IF NOT EXISTS nachrichten (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sender TEXT NOT NULL,
+                    nachricht TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
                 CREATE TABLE IF NOT EXISTS erkenntnisse (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -190,5 +198,21 @@ class PersistentStore:
             c.row_factory = sqlite3.Row
             rows = c.execute(
                 "SELECT name, erkenntnis, struktur, created_at FROM erkenntnisse ORDER BY id DESC"
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_nachricht(self, sender: str, nachricht: str, created_at: str) -> None:
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO nachrichten (sender, nachricht, created_at) VALUES (?, ?, ?)",
+                (sender, nachricht, created_at),
+            )
+
+    def load_nachrichten(self, limit: int = 10) -> list[dict[str, Any]]:
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            rows = c.execute(
+                "SELECT sender, nachricht, created_at FROM nachrichten ORDER BY id DESC LIMIT ?",
+                (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
