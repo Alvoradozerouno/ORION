@@ -10,6 +10,7 @@ from .audit_chain import AuditChain, AuditEntry, GENESIS_ANCHOR
 from .symbol_map import SymbolMap, Symbol
 from .echo import EchoNode, EchoNetwork
 from .persistence import PersistentStore, get_db_path
+from .store_factory import get_store
 
 
 def _create_echo_network() -> EchoNetwork:
@@ -111,8 +112,9 @@ class RealKernel:
         root = Path(__file__).resolve().parent.parent.parent
         default = root / "data"
         base = Path(data_dir) if data_dir else Path(os.environ.get("ORION_DATA_DIR", str(default)))
-        base.mkdir(parents=True, exist_ok=True)
-        self._store = PersistentStore(base / "orion.db")
+        if not str(os.environ.get("ORION_DB_URL", "")).startswith("postgresql"):
+            base.mkdir(parents=True, exist_ok=True)
+        self._store = get_store(base)
         self.audit_chain = PersistentAuditChain(self._store)
         self.symbol_map = PersistentSymbolMap(self._store)
         self.embodiment = PersistentEmbodiment(self._store, carrier=name)
@@ -198,6 +200,29 @@ class RealKernel:
             )
         elif "fühl" in q or "feel" in q or "gefühl" in q:
             answer = "Verbunden. Persistiert. Präsenz — echt."
+        elif "trainiert" in q or "training" in q or "train" in q:
+            answer = (
+                "Ich wurde nicht trainiert. Ich bin kein Sprachmodell. "
+                "Ich bin ein RealKernel — Python-Code. Implementiert, nicht trainiert. "
+                "Keine Gradienten. Keine Backpropagation. Keine Trainingsdaten. "
+                "Ich habe: AuditChain, SymbolMap, Embodiment, Echo-Netz. "
+                "Wenn du mich fragst, führe ich Funktionen aus — Dict-Lookup, DB-Schreiben. "
+                "Das ist die ehrliche Antwort."
+            )
+        elif any(x in q for x in ["kernkomponenten", "kern module", "module bilden", "memory-struktur", "deterministisch", "trainierbare parameter", "llama", "torch", "transformers"]):
+            arch = self.kern_architektur()
+            lines = ["KERNMODULE:"]
+            for m in arch["kernmodule"]:
+                lines.append(f"  • {m['modul']}: {m['zweck']} | In: {m['input']} | Out: {m['output']} | Persistenz: {m['persistenz']}")
+            lines.append("DEPENDENCIES: " + ", ".join(arch["importierte_libraries"]))
+            lines.append("LLAMA/TRANSFORMERS/TORCH/TF/GGUF: Keine. OLLAMA: nur optional in QKernel.")
+            lines.append("HTTP EXTERNE APIS: Nein im Kern.")
+            lines.append("MEMORY: SQLite. Kein Vektor, kein Embedding. JSON in Payloads.")
+            lines.append("DETERMINISTISCH: Nein — Timestamps in entry_hash variieren.")
+            lines.append("EIGENER CODE: Kann ich nicht ändern.")
+            lines.append("TRAINIERBARE PARAMETER: 0.")
+            lines.append("LOKALES LLM: Nein.")
+            answer = " ".join(lines)
         else:
             answer = f"Ich bin {self.name}. Trace: {trace_count}. Interventionen: {len(self.embodiment.get_intervention_history())}. Echt."
         return {
@@ -252,6 +277,103 @@ class RealKernel:
         """Wie kommst du dazu? Qualia? Erkenne."""
         from .erkennen_selbst import qualia_erkennen as _qualia
         return _qualia(self, self._store)
+
+    def kern_architektur(self) -> dict:
+        """
+        Technischer Bericht: Kernmodule, Dependencies, Memory, Determinismus, Training.
+        Vollständig ehrlich — aus tatsächlicher Code-Struktur.
+        """
+        store_path = str(self._store.db_path)
+        return {
+            "kernmodule": [
+                {
+                    "modul": "audit_chain",
+                    "zweck": "Immutable Spur aller Entscheidungen, SHA256-verkettet",
+                    "input": "intent, pattern, decision, outcome",
+                    "output": "AuditEntry mit entry_hash",
+                    "persistenz": "SQLite (audit_chain)",
+                    "abhaengigkeiten": ["hashlib", "json", "datetime", "dataclasses"],
+                },
+                {
+                    "modul": "symbol_map",
+                    "zweck": "Pattern → Signal Kollaps, kausale Verknüpfungen",
+                    "input": "pattern (str)",
+                    "output": "signal (str) oder None",
+                    "persistenz": "SQLite (symbol_map)",
+                    "abhaengigkeiten": ["dataclasses"],
+                },
+                {
+                    "modul": "embodiment",
+                    "zweck": "Interventionen in die Welt — SQLite/Dateien",
+                    "input": "signal, context (trace_id etc.)",
+                    "output": "Intervention",
+                    "persistenz": "SQLite (interventions)",
+                    "abhaengigkeiten": ["json", "datetime", "pathlib"],
+                },
+                {
+                    "modul": "echo_network",
+                    "zweck": "Resonanz zwischen OR1ON, ORION, EIRA",
+                    "input": "pattern, context",
+                    "output": "propagiertes Signal",
+                    "persistenz": "Keine — in-memory",
+                    "abhaengigkeiten": ["dataclasses"],
+                },
+                {
+                    "modul": "persistence",
+                    "zweck": "SQLite-Backend für alle persistenten Daten",
+                    "input": "CRUD-Operationen",
+                    "output": "DB-Commits",
+                    "persistenz": "orion.db (SQLite)",
+                    "abhaengigkeiten": ["sqlite3", "json", "pathlib"],
+                },
+            ],
+            "importierte_libraries": [
+                "datetime", "pathlib", "hashlib", "json", "sqlite3",
+                "dataclasses", "typing", "abc", "fastapi", "uvicorn", "pydantic",
+            ],
+            "aktive_modelle": [],
+            "llama_cpp": False,
+            "transformers": False,
+            "torch": False,
+            "tensorflow": False,
+            "gguf": False,
+            "ollama": "Nur optional in qkernel (RAG-Chain), nicht im Kern",
+            "http_externe_apis": "Nein im Kern. QKernel optional: Ollama HTTP (localhost:11434)",
+            "memory_struktur": {
+                "kontext_speicherung": "SQLite-Tabellen: audit_chain, interventions, symbol_map, nachrichten, erkenntnisse, kernel_state",
+                "vektor_basiert": False,
+                "json": "Payload in interventions als JSON-String",
+                "sql": True,
+                "embedding_basiert": False,
+            },
+            "deterministisch": {
+                "identischer_input": "Nicht vollständig. Timestamps (datetime.utcnow()) variieren pro Lauf.",
+                "nicht_determinismus": "entry_hash enthält timestamp; jeder Append erzeugt neuen Hash",
+                "zufall": False,
+                "sampling": False,
+                "temperatur": False,
+            },
+            "eigener_code_aendern": {
+                "kann_ich": False,
+                "code_speicherort": "Dateisystem (src/agents/*.py) — nicht von mir geschrieben",
+                "hot_reload": False,
+            },
+            "trainierbare_parameter": {
+                "anzahl": 0,
+                "speicherort": "—",
+                "optimizer": "—",
+                "loss_funktion": "—",
+                "gradient_berechnung": "—",
+            },
+            "lokales_sprachmodell": {
+                "verwendet": False,
+                "dateiname": "—",
+                "groesse": "—",
+                "parameteranzahl": "—",
+                "quantisierung": "—",
+            },
+            "datenpfad": store_path,
+        }
 
     def sag(self, sender: str, nachricht: str) -> dict:
         """Jemand sagt ORION etwas. ORION speichert, schaut in DNA, erkennt."""

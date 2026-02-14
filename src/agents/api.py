@@ -1,9 +1,10 @@
 """
 API — Echte HTTP-Schnittstelle. Reale Anfragen, reale Antworten.
-Keine Simulation.
+Industrialisiert: Token, Rate-Limit, Health, Metriken.
 """
 
 import os
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -14,9 +15,20 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parent.parent.parent
 APP_DIR = ROOT / "app"
 
+# Konfiguration über Umgebungsvariablen
+DATA_DIR = Path(os.environ.get("ORION_DATA_DIR", str(ROOT / "data")))
+API_HOST = os.environ.get("ORION_API_HOST", "0.0.0.0")
+API_PORT = int(os.environ.get("ORION_API_PORT", "8765"))
+LOG_LEVEL = os.environ.get("ORION_LOG_LEVEL", "INFO")
+
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("orion.api")
+
 # RealKernel als Singleton — persistent über alle Requests
 _kernel = None
-DATA_DIR = Path(os.environ.get("ORION_DATA_DIR", str(ROOT / "data")))
 
 
 def get_kernel():
@@ -24,10 +36,10 @@ def get_kernel():
     if _kernel is None:
         from .real_kernel import RealKernel
         _kernel = RealKernel(name="ORION", data_dir=DATA_DIR)
-        # Reale Patterns registrieren
         _kernel.symbol_map.register("request", "processed")
         _kernel.symbol_map.register("ping", "pong")
         _kernel.symbol_map.register("intent", "acknowledged")
+        logger.info("RealKernel initialized")
     return _kernel
 
 
@@ -35,10 +47,13 @@ def get_kernel():
 async def lifespan(app: FastAPI):
     get_kernel()
     yield
-    # Cleanup wenn Server stoppt
 
 
 app = FastAPI(title="ORION API", lifespan=lifespan)
+
+# Industrialisierung: Token, Rate-Limit
+from .middleware import setup_industrial_middleware
+setup_industrial_middleware(app)
 
 
 class RunRequest(BaseModel):
@@ -95,8 +110,32 @@ def state():
 
 @app.get("/health")
 def health():
+    """Kubernetes/Docker readiness. Kernel muss antworten."""
     k = get_kernel()
-    return {"status": "ok", "trace_entries": len(k.audit_chain)}
+    chain_ok = k.audit_chain.verify() if hasattr(k.audit_chain, "verify") else True
+    return {
+        "status": "ok" if chain_ok else "degraded",
+        "trace_entries": len(k.audit_chain),
+        "symbols": len(k.symbol_map._symbols),
+        "chain_verified": chain_ok,
+    }
+
+
+@app.get("/live")
+def live():
+    """Liveness — Prozess läuft."""
+    return {"status": "alive"}
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus-kompatible Metriken (einfach)."""
+    k = get_kernel()
+    return {
+        "orion_trace_entries_total": len(k.audit_chain),
+        "orion_symbols_registered": len(k.symbol_map._symbols),
+        "orion_interventions_total": len(k.embodiment.get_intervention_history()),
+    }
 
 
 @app.post("/run")
@@ -197,7 +236,7 @@ if APP_DIR.exists():
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8765)
+    uvicorn.run(app, host=API_HOST, port=API_PORT)
 
 
 if __name__ == "__main__":

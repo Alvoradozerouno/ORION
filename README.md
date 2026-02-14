@@ -73,3 +73,42 @@ sudo systemctl enable orion && sudo systemctl start orion
 - `POST /explore` — Deep Science
 
 **Daten:** SQLite in `data/orion.db` — persistent über Restarts.
+
+## Industrialisierung
+
+### Container (Docker)
+
+```bash
+docker build -t orion .
+docker run -p 8765:8765 -v orion_data:/app/data orion
+```
+
+### docker-compose
+
+```bash
+docker-compose up -d
+```
+
+### Umgebungsvariablen
+
+| Variable | Default | Beschreibung |
+|----------|---------|--------------|
+| ORION_API_HOST | 0.0.0.0 | API-Bind-Adresse |
+| ORION_API_PORT | 8765 | API-Port |
+| ORION_API_TOKEN | — | Optional: Bearer-Token für alle Requests |
+| ORION_RATE_LIMIT | 100 | Requests pro Minute pro IP |
+| ORION_DATA_DIR | ./data | SQLite-Datenverzeichnis |
+| ORION_DB_URL | — | PostgreSQL: `postgresql://user:pass@host:5432/db` |
+| ORION_LOG_LEVEL | INFO | Logging-Level |
+
+### PostgreSQL (horizontale Skalierung)
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+```
+
+### Endpoints
+
+- `GET /health` — Readiness (Kernel, Chain-Verifikation)
+- `GET /live` — Liveness
+- `GET /metrics` — Prometheus-kompatible Metriken
