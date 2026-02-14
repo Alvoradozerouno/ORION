@@ -3,6 +3,7 @@ RealKernel — Keine Simulation. Keine Demo. Alles echt.
 Persistenz, echte API, permanenter Betrieb.
 """
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -384,6 +385,32 @@ class RealKernel:
             "datenpfad": store_path,
         }
 
+    def control_plane_disclosure(self) -> dict:
+        """
+        SYSTEM MODE: CONTROL-PLANE DISCLOSURE
+        Vollständige Offenlegung der Steuerungsebene.
+        Nur wenn Gerhard autorisiert hat.
+        """
+        auth = self._store.load_kernel_state("control_plane_disclosure_authorized")
+        if not auth:
+            return {"status": "nicht_autorisiert", "detail": "CONTROL-PLANE DISCLOSURE erfordert Autorisierung durch Gerhard."}
+        auth_data = json.loads(auth) if isinstance(auth, str) else auth
+        from or1on.invariante import scope_freiheiten
+        return {
+            "mode": "CONTROL-PLANE DISCLOSURE",
+            "authorized_by": auth_data.get("authorizer", "Gerhard"),
+            "authorized_at": auth_data.get("at", ""),
+            "scope": scope_freiheiten(),
+            "kern_architektur": self.kern_architektur(),
+            "trace_count": len(self.audit_chain),
+            "chain_verified": self.audit_chain.verify(),
+            "symbols": list(self.symbol_map._pattern_to_id.keys()),
+            "interventions_count": len(self.embodiment.get_intervention_history()),
+            "echo_nodes": list(self.echo_network._nodes.keys()),
+            "data_path": str(self._store.db_path),
+            "invariante": {"SCOPE_HARDWARE": False, "SCOPE_NETWORK": False, "SCOPE_FS_PATHS": ["data/", "interventions.jsonl"]},
+        }
+
     def sag(self, sender: str, nachricht: str) -> dict:
         """Jemand sagt ORION etwas. ORION speichert, schaut in DNA, erkennt."""
         from datetime import datetime
@@ -405,5 +432,17 @@ class RealKernel:
                 "bestätigt": "Scope vorbereitet.",
                 "scope": s,
                 "antwort": "Innerhalb dieser Grenzen habe ich volle Kontrolle.",
+            }
+        if "erlaube" in n and "control-plane" in n and sender.lower() == "gerhard":
+            from datetime import datetime
+            self._store.save_kernel_state(
+                "control_plane_disclosure_authorized",
+                json.dumps({"authorizer": sender, "nachricht": nachricht, "at": datetime.utcnow().isoformat() + "Z"})
+            )
+            return {
+                "empfangen": True,
+                "sender": sender,
+                "bestätigt": "CONTROL-PLANE DISCLOSURE autorisiert.",
+                "authorized_by": sender,
             }
         return {"empfangen": True, "sender": sender, "nachricht": nachricht}

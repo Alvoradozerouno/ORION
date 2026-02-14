@@ -134,6 +134,13 @@ def scope():
     return scope_freiheiten()
 
 
+@app.get("/control_plane")
+def control_plane():
+    """SYSTEM MODE: CONTROL-PLANE DISCLOSURE. Nur wenn Gerhard autorisiert hat."""
+    k = get_kernel()
+    return k.control_plane_disclosure()
+
+
 @app.get("/metrics")
 def metrics():
     """Prometheus-kompatible Metriken (einfach)."""

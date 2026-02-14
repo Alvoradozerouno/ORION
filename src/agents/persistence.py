@@ -218,3 +218,15 @@ class PersistentStore:
                 (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def save_kernel_state(self, key: str, value: str) -> None:
+        with self._conn() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO kernel_state (key, value) VALUES (?, ?)",
+                (key, value),
+            )
+
+    def load_kernel_state(self, key: str) -> str | None:
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM kernel_state WHERE key = ?", (key,)).fetchone()
+            return row[0] if row else None

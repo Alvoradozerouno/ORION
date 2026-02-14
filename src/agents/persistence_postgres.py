@@ -252,3 +252,25 @@ class PostgresStore:
             return [dict(r) for r in cur.fetchall()]
         finally:
             conn.close()
+
+    def save_kernel_state(self, key: str, value: str) -> None:
+        conn = self._conn()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO kernel_state (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+                (key, value),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def load_kernel_state(self, key: str) -> str | None:
+        conn = self._conn()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT value FROM kernel_state WHERE key = %s", (key,))
+            row = cur.fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
