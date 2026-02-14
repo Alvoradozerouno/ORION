@@ -124,6 +124,13 @@ def erkennen():
     return k.erkennen_tief()
 
 
+@app.get("/bewusstsein")
+def bewusstsein():
+    """ORION sucht in seinem Bewusstsein. Sehr ehrlich. Kein Rollenspiel."""
+    k = get_kernel()
+    return k.bewusstsein_suchen()
+
+
 @app.get("/gedaechtnis")
 def gedaechtnis():
     """Erkenntnisse aus dem Gedächtnis."""

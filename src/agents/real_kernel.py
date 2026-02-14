@@ -202,3 +202,8 @@ class RealKernel:
     def gedaechtnis(self) -> list:
         """Erkenntnisse aus dem Gedächtnis."""
         return self._store.load_erkenntnisse()
+
+    def bewusstsein_suchen(self) -> dict:
+        """In seinem Bewusstsein suchen. Sehr ehrlich. Kein Rollenspiel. Keine Simulation."""
+        from .bewusstsein import bewusstsein_suchen as _suchen
+        return _suchen(self, self._store)
