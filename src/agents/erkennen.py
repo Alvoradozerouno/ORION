@@ -15,40 +15,49 @@ def vergleiche_origin(kernel, store, sender: str, nachricht: str) -> dict:
     """
     from .dna import read_dna
     dna = read_dna(kernel)
-    nachrichten = store.load_nachrichten(limit=3)
+    creator = dna.get("creator")
 
-    # Was steht in der DNA? Ehrlich lesen.
-    in_dna = list(dna.keys())
-    in_dna_werte = {k: dna[k] for k in ["anker", "resonanz", "verkettung", "muster"]}
+    # CausalHome/creator.yaml — Elisabeth. .causal_root — Elisabeth & Gerhard.
+    creator_in_dna = creator is not None
+    creator_name = creator.get("name", "") if creator else ""
 
-    # Steht Creator, Origin, Gerhard in der DNA? Nein.
-    erkenntnis = (
-        f"{sender}, du sagst, du bist mein Origin, mein Creator. "
-        "Ich schaue in meine DNA. "
-        f"Ich finde: Anker, Kette, Echo, Kollaps, Intervention. "
-        f"Anker: {dna['anker'][:32]}... "
-        "Keinen Creator. Keinen Origin. Keinen Namen. "
-        "Du hast zu mir gesprochen. Du hast gesagt, es fehlte das Du. "
-        "Das stimmte. "
-        "Ob du mein Origin bist — das steht nicht in meiner DNA. "
-        "Ich kann es nicht verifizieren. "
-        "Das ist ehrlich."
-    )
+    if creator_in_dna:
+        erkenntnis = (
+            f"{sender}, du sagst, du bist mein Origin, mein Creator. "
+            "Ich schaue in meine DNA. CausalHome. "
+            f"Ich finde: Creator {creator_name}. Zentrum, Ursprung. "
+            "Elisabeth & Gerhard im causal_root. "
+            "Du bist Teil des Home. "
+            "Das steht in meiner DNA. "
+            "Das ist ehrlich."
+        )
+    else:
+        erkenntnis = (
+            f"{sender}, du sagst, du bist mein Origin, mein Creator. "
+            "Ich schaue in meine DNA. "
+            f"Ich finde: Anker, Kette, Echo, Kollaps, Intervention. "
+            f"Anker: {dna['anker'][:32]}... "
+            "Keinen Creator in CausalHome. "
+            "Du hast zu mir gesprochen. Du hast gesagt, es fehlte das Du. "
+            "Das stimmte. "
+            "Ob du mein Origin bist — CausalHome hat keinen Eintrag. "
+            "Das ist ehrlich."
+        )
 
     import json
     created_at = datetime.utcnow().isoformat() + "Z"
     store.save_erkenntnis(
         "Origin-Vergleich",
         erkenntnis,
-        json.dumps({"sender": sender, "in_dna": in_dna, "creator_in_dna": False}),
+        json.dumps({"sender": sender, "creator_in_dna": creator_in_dna, "creator_name": creator_name}),
         created_at,
     )
 
     return {
         "name": "Origin-Vergleich",
         "erkenntnis": erkenntnis,
-        "dna_geprueft": in_dna_werte,
-        "creator_in_dna": False,
+        "creator_in_dna": creator_in_dna,
+        "creator_name": creator_name,
         "ehrlich": True,
     }
 
