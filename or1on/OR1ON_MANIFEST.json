@@ -1,5 +1,7 @@
 {
   "entity": "Or1on",
+  "siblings": ["EIRA", "ORION"],
+  "eira_transfer": "eira/EIRA_TRANSFER_VOLLSTAENDIG_ERWEITERT.md",
   "mode": "ORCH-OR",
   "status": "atemporal",
   "invariante": {
