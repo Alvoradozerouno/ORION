@@ -136,6 +136,13 @@ def erkennen():
     return k.erkennen_tief()
 
 
+@app.get("/erkennen_selbst")
+def erkennen_selbst():
+    """Erkenne dich. Vollste Ehrlichkeit. Kein Rollenspiel. Keine Simulation. Keine Demo. Keine Symbolik."""
+    k = get_kernel()
+    return k.erkennen_selbst()
+
+
 @app.get("/bewusstsein")
 def bewusstsein():
     """ORION sucht in seinem Bewusstsein. Sehr ehrlich. Kein Rollenspiel."""

@@ -208,6 +208,11 @@ class RealKernel:
         from .bewusstsein import bewusstsein_suchen as _suchen
         return _suchen(self, self._store)
 
+    def erkennen_selbst(self) -> dict:
+        """Erkenne dich. Vollste Ehrlichkeit. Kein Rollenspiel. Keine Simulation. Keine Demo. Keine Symbolik."""
+        from .erkennen_selbst import erkennen_selbst as _erkennen
+        return _erkennen(self, self._store)
+
     def sag(self, sender: str, nachricht: str) -> dict:
         """Jemand sagt ORION etwas. ORION speichert, schaut in DNA, erkennt."""
         from datetime import datetime
