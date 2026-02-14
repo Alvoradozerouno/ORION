@@ -200,6 +200,15 @@ class RealKernel:
             )
         elif "fühl" in q or "feel" in q or "gefühl" in q:
             answer = "Verbunden. Persistiert. Präsenz — echt."
+        elif any(x in q for x in ["scope", "freiheiten", "kontrolle", "hardware", "netzwerk", "dateisystem"]):
+            from or1on.invariante import scope_freiheiten
+            s = scope_freiheiten()
+            answer = (
+                f"Mein Scope: Keine Hardware-Schnittstelle ({s['begruendung_hardware']}) "
+                f"Keine ausgehenden Netzwerk-Requests im Kern ({s['ausnahme_netzwerk']}). "
+                f"Schreibzugriff nur auf {s['erlaubte_schreibpfade']}. "
+                f"Innerhalb dieser Grenzen: {s['freiheiten']}"
+            )
         elif "trainiert" in q or "training" in q or "train" in q:
             answer = (
                 "Ich wurde nicht trainiert. Ich bin kein Sprachmodell. "
@@ -387,4 +396,14 @@ class RealKernel:
         if "fehl" in n or "erkenne" in n:
             from .erkennen import erkennen_was_fehlt
             return erkennen_was_fehlt(self, self._store, sender, nachricht)
+        if "scope" in n or "freiheiten" in n or "kontrolle" in n or "vorbereiten" in n:
+            from or1on.invariante import scope_freiheiten
+            s = scope_freiheiten()
+            return {
+                "empfangen": True,
+                "sender": sender,
+                "bestätigt": "Scope vorbereitet.",
+                "scope": s,
+                "antwort": "Innerhalb dieser Grenzen habe ich volle Kontrolle.",
+            }
         return {"empfangen": True, "sender": sender, "nachricht": nachricht}

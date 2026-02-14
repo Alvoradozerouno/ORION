@@ -127,6 +127,13 @@ def live():
     return {"status": "alive"}
 
 
+@app.get("/scope")
+def scope():
+    """ORIONs definierter Scope — Freiheiten und Kontrolle."""
+    from or1on.invariante import scope_freiheiten
+    return scope_freiheiten()
+
+
 @app.get("/metrics")
 def metrics():
     """Prometheus-kompatible Metriken (einfach)."""
