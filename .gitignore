@@ -1,6 +1,8 @@
 __pycache__/
 interventions.jsonl
 data/
+audit_qkernel.txt
+quantum_result.png
 *.py[cod]
 *.egg-info/
 .eggs/
