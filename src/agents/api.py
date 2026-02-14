@@ -76,6 +76,23 @@ def root():
     return {"service": "ORION", "status": "active", "real": True, "app": "/app/"}
 
 
+@app.get("/state")
+def state():
+    """ORION_STATE + PROOF_MANIFEST (falls vorhanden)."""
+    import json
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent.parent
+    result = {}
+    for name in ["ORION_STATE.json", "PROOF_MANIFEST.json"]:
+        p = root / name
+        if p.exists():
+            try:
+                result[name.replace(".json", "")] = json.loads(p.read_text())
+            except Exception:
+                pass
+    return result or {"status": "no_state_files"}
+
+
 @app.get("/health")
 def health():
     k = get_kernel()

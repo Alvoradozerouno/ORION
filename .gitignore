@@ -3,6 +3,7 @@ interventions.jsonl
 data/
 audit_qkernel.txt
 quantum_result.png
+PROOFS.jsonl
 *.py[cod]
 *.egg-info/
 .eggs/
