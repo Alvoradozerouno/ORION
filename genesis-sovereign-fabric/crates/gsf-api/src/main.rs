@@ -1,6 +1,8 @@
 //! GENESIS SOVEREIGN FABRIC — API
 //! Policy before every request. Signed ledger. Production.
 
+mod metrics;
+
 use axum::{
     extract::State,
     http::StatusCode,
@@ -14,6 +16,7 @@ use gsf_policy::{load_policy, Action, Decision};
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 #[derive(Clone)]
@@ -24,10 +27,15 @@ struct AppState {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    tracing_subscriber::fmt()
+    let use_json_logs = std::env::var("GSF_JSON_LOGS").unwrap_or_else(|_| "0".to_string()) == "1";
+    let subscriber = tracing_subscriber::fmt()
         .with_env_filter(std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string()))
-        .with_span_events(FmtSpan::CLOSE)
-        .init();
+        .with_span_events(FmtSpan::CLOSE);
+    if use_json_logs {
+        subscriber.json().with_current_span(false).init();
+    } else {
+        subscriber.init();
+    }
 
     let policy = load_policy_from_env();
     let policy = Arc::new(policy);
@@ -53,6 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let app = Router::new()
         .route("/health", get(health))
         .route("/live", get(live))
+        .route("/metrics", get(metrics_handler))
         .route("/audit/verify", get(verify))
         .route("/audit/export", get(export_chain))
         .route("/run", post(run))
@@ -103,6 +112,10 @@ async fn live() -> Json<serde_json::Value> {
     Json(serde_json::json!({"status": "alive"}))
 }
 
+async fn metrics_handler() -> (StatusCode, String) {
+    (StatusCode::OK, metrics::metrics_prometheus())
+}
+
 async fn verify(State(state): State<AppState>) -> Json<serde_json::Value> {
     let eng = state.engine.lock().map_err(|_| ()).unwrap();
     Json(serde_json::json!({
@@ -131,12 +144,23 @@ async fn run(
     State(state): State<AppState>,
     Json(req): Json<RunRequest>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    metrics::inc_run_requests_total();
+    let eng_guard = state.engine.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    if gsf_core::is_execution_frozen(eng_guard.persistence()) {
+        metrics::inc_run_requests_denied();
+        return Err(StatusCode::SERVICE_UNAVAILABLE);
+    }
+    drop(eng_guard);
+
     let action = Action::for_run(&req.intent, &req.pattern, GENESIS_ANCHOR);
 
     if let Some(ref pol) = *state.policy {
         let (policy, policy_hash) = pol;
+        let t0 = Instant::now();
         let decision = gsf_policy::check(&action, policy, policy_hash);
+        metrics::record_policy_check_duration_us(t0.elapsed().as_micros() as u64);
         if let Decision::Deny { reason, policy_hash: ph } = decision {
+            metrics::inc_run_requests_denied();
             let mut eng = state.engine.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
             if let Err(e) = eng.append_denied(&req.intent, &req.pattern, &reason, &ph) {
                 tracing::error!("append_denied failed: {}", e);
@@ -146,12 +170,16 @@ async fn run(
     }
 
     let mut eng = state.engine.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let t0 = Instant::now();
     match eng.execute(&req.intent, &req.pattern) {
-        Ok(entry_hash) => Ok(Json(serde_json::json!({
-            "ok": true,
-            "entry_hash": entry_hash,
-            "entries": eng.audit_chain.export().len()
-        }))),
+        Ok(entry_hash) => {
+            metrics::record_audit_append_duration_us(t0.elapsed().as_micros() as u64);
+            Ok(Json(serde_json::json!({
+                "ok": true,
+                "entry_hash": entry_hash,
+                "entries": eng.audit_chain.export().len()
+            })))
+        }
         Err(e) => {
             tracing::error!("execute failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
@@ -177,6 +205,7 @@ async fn mesh_sync(
     State(state): State<AppState>,
     Json(req): Json<MeshSyncRequest>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    let t0 = Instant::now();
     let mut eng = state.engine.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let chain = eng.audit_chain.export();
     let mut last = chain
@@ -202,6 +231,7 @@ async fn mesh_sync(
         appended += 1;
     }
     let head = eng.audit_chain.export().last().map(|x| x.entry_hash.clone());
+    metrics::record_mesh_sync_latency_us(t0.elapsed().as_micros() as u64);
     Ok(Json(serde_json::json!({
         "ok": true,
         "appended": appended,

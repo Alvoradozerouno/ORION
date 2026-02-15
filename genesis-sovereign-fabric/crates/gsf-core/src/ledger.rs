@@ -1,8 +1,12 @@
-//! Signed Decision Ledger — Ed25519 per entry
+//! Signed Decision Ledger — Ed25519 per entry, KeyStore, canonical signing
 
 use crate::{audit_chain::AuditEntry, GENESIS_ANCHOR};
 use ed25519_dalek::{Keypair, PublicKey, Signature, Signer, Verifier};
+use gsf_crypto::canonical_sign_payload;
 use serde::{Deserialize, Serialize};
+
+/// Key version in AuditEntry — verify() must reject expired/revoked keys
+pub const DEFAULT_KEY_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedEntry {
@@ -11,6 +15,11 @@ pub struct SignedEntry {
     pub entry_hash: String,
     pub signature: String,
     pub timestamp: String,
+    #[serde(default)]
+    pub key_version_id: Option<u32>,
+    pub intent: String,
+    pub pattern: String,
+    pub decision: String,
 }
 
 pub struct LedgerSigner {
@@ -32,16 +41,15 @@ impl LedgerSigner {
         Some(Self::from_seed(&arr))
     }
 
+    /// Deterministic signature mode — canonical field order, no timestamp in scope
     pub fn sign_entry(&self, entry: &AuditEntry) -> SignedEntry {
-        let payload = format!(
-            "{}|{}|{}|{}|{}|{}|{}",
+        let payload = canonical_sign_payload(
             GENESIS_ANCHOR,
-            entry.prev_hash,
-            entry.entry_hash,
-            entry.timestamp,
-            entry.intent,
-            entry.pattern,
-            entry.decision
+            &entry.prev_hash,
+            &entry.entry_hash,
+            &entry.intent,
+            &entry.pattern,
+            &entry.decision,
         );
         let sig = self.keypair.sign(payload.as_bytes());
         SignedEntry {
@@ -50,21 +58,30 @@ impl LedgerSigner {
             entry_hash: entry.entry_hash.clone(),
             signature: hex::encode(sig.to_bytes()),
             timestamp: entry.timestamp.clone(),
+            key_version_id: Some(DEFAULT_KEY_VERSION),
+            intent: entry.intent.clone(),
+            pattern: entry.pattern.clone(),
+            decision: entry.decision.clone(),
         }
     }
 
     pub fn verifying_key(&self) -> PublicKey {
         self.keypair.public
     }
+
+    pub fn sign_payload(&self, payload: &str) -> String {
+        hex::encode(self.keypair.sign(payload.as_bytes()).to_bytes())
+    }
 }
 
 pub fn verify_signed_entry(signed: &SignedEntry, verifying_key: &PublicKey) -> bool {
-    let payload = format!(
-        "{}|{}|{}|{}",
-        signed.genesis_anchor,
-        signed.prev_hash,
-        signed.entry_hash,
-        signed.timestamp
+    let payload = canonical_sign_payload(
+        &signed.genesis_anchor,
+        &signed.prev_hash,
+        &signed.entry_hash,
+        &signed.intent,
+        &signed.pattern,
+        &signed.decision,
     );
     let sig_bytes = match hex::decode(&signed.signature) {
         Ok(b) => b,

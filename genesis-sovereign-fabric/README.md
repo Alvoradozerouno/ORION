@@ -28,17 +28,30 @@ GSF_PORT=8766 ./target/release/gsf-api
 | Endpoint | Method | Description |
 |----------|--------|--------------|
 | /health | GET | Liveness |
+| /live | GET | Readiness |
+| /metrics | GET | Prometheus metrics |
 | /audit/verify | GET | Chain verification |
 | /audit/export | GET | Export chain as JSON |
 | /run | POST | Execute intent/pattern |
+| /mesh/sync | POST | Mesh sync |
 
 ## Python SDK
 
 ```python
-from gsf_sdk import GsfClient
+from gsf_sdk import GsfClient, AsyncGsfClient
+
 client = GsfClient("http://localhost:8765")
-print(client.health())
-print(client.verify_audit())
+client.health()
+client.verify_chain()
+client.execute("intent", "pattern")
+client.export_signed_ledger()
+client.monitor_metrics()
+client.mesh_join(entries)
+
+# Async
+async_client = AsyncGsfClient()
+await async_client.execute_async("intent", "pattern")
+await async_client.monitor_metrics_async()
 ```
 
 ## Helm
@@ -49,7 +62,7 @@ helm install gsf ./helm/genesis-sovereign-fabric -n gsf --create-namespace
 
 ## Docs
 
-- [Architecture](../docs/GENESIS_SOVEREIGN_FABRIC_ARCHITECTURE.md)
+- [Production Escalation](docs/PRODUCTION_ESCALATION.md)
 - [Threat Model](docs/THREAT_MODEL.md)
 - [Mesh Design](docs/MESH_DESIGN.md)
 - [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)

@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "crates/gsf-core",
+  "crates/gsf-crypto",
   "crates/gsf-policy",
   "crates/gsf-api",
   "crates/gsf-fabric",

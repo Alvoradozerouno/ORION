@@ -25,6 +25,10 @@ impl WorkflowEngine {
         }
     }
 
+    pub fn persistence(&self) -> Option<&Persistence> {
+        self.persistence.as_ref()
+    }
+
     pub fn with_persistence(mut self, path: impl AsRef<Path>) -> Result<Self> {
         let p = Persistence::new(path)?;
         let last_hash = p.get_last_hash()?;

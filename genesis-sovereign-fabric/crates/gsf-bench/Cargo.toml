@@ -7,7 +7,14 @@ edition = "2021"
 name = "bench"
 harness = false
 
+[[bench]]
+name = "chaos"
+harness = false
+
 [dependencies]
 gsf-core = { path = "../gsf-core" }
 gsf-policy = { path = "../gsf-policy" }
 criterion = "0.5"
+sha2 = "0.10"
+chrono = { version = "0.4", features = ["serde"] }
+hex = "0.4"
