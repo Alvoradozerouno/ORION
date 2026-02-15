@@ -37,3 +37,15 @@
 - Denied requests: 403, entry appended with decision=denied
 - Policy loaded from GSF_POLICY_PATH or config/policy.dsl
 - Cannot bypass: check() is called in request path
+
+## GP-AI Layers
+
+| Layer | Mitigation |
+|-------|------------|
+| 1 Kernel | Action graph, output validation, genesis anchor |
+| 2 Fabric | Resource limits, temperature cap |
+| 3 Registry | Model SHA256, SBOM |
+| 4 Mesh | mTLS, conflict detection, fork resolution |
+| 5 Learning | Dataset hash, training audit |
+| 6 Hardware | TPM binding optional |
+| 7 Bench | Latency, throughput, replay verification |

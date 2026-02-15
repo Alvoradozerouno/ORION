@@ -1,0 +1,13 @@
+[package]
+name = "gsf-bench"
+version = "0.1.0"
+edition = "2021"
+
+[[bench]]
+name = "bench"
+harness = false
+
+[dependencies]
+gsf-core = { path = "../gsf-core" }
+gsf-policy = { path = "../gsf-policy" }
+criterion = "0.5"
