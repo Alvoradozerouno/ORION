@@ -1,0 +1,11 @@
+apiVersion: v2
+name: genesis-sovereign-fabric
+description: Auditierbare, deterministische AI-Control-Plane
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - governance
+  - audit
+  - control-plane

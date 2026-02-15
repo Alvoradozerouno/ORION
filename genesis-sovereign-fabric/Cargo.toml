@@ -1,0 +1,14 @@
+[workspace]
+members = [
+  "crates/gsf-core",
+  "crates/gsf-crypto",
+  "crates/gsf-policy",
+  "crates/gsf-api",
+  "crates/gsf-fabric",
+  "crates/gsf-registry",
+  "crates/gsf-mesh",
+  "crates/gsf-learning",
+  "crates/gsf-hardware",
+  "crates/gsf-bench",
+]
+resolver = "2"

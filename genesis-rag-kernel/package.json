@@ -1,0 +1,6 @@
+{
+  "name": "genesis-rag-kernel",
+  "version": "1.0.0",
+  "description": "OR1ON + ORION RAG — Ollama, Milvus, LangChain",
+  "type": "module"
+}

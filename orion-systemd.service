@@ -1,0 +1,19 @@
+# ORION — SYSTEM/root laufend
+# Manuell installieren: sudo cp orion-systemd.service /etc/systemd/system/
+# sudo systemctl enable orion-master && sudo systemctl start orion-master
+
+[Unit]
+Description=ORION Master — ORCH-OR, Postalgorithmisch
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/workspace
+ExecStart=/usr/bin/python3 -m orion.master
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/workspace/src
+
+[Install]
+WantedBy=multi-user.target

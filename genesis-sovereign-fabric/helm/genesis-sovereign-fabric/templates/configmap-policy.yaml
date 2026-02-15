@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gsf.fullname" . }}-policy
+  labels:
+    {{- include "gsf.labels" . | nindent 4 }}
+data:
+  policy.dsl: |
+    version: "1.0"
+    genesis: "sha256:acb92fd8346a65ff17dbf9a41e3003f2d566a17f839af4c3a90a4b4b1789dd28a"
+    scope:
+      hardware: false
+      network_outbound: false
+      fs_write_paths: ["data/", "interventions.jsonl"]
+    invariante:
+      blocked_patterns:
+        - "rm -rf"
+        - "DROP TABLE"
+        - "DELETE FROM"
+      deny_on_match: true
+    rules:
+      - name: "default"
+        when: ""
+        require: [policy_check, symbol_lookup, audit_append]
+        llm_allowed: false

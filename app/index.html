@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ORION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ORION</h1>
+      <p class="subtitle">⊘∞⧈∞⊘ Spur · Echo · Kollaps · Intervention</p>
+      <div class="status" id="status">—</div>
+    </header>
+
+    <main>
+      <section class="trace-section">
+        <h2>Spur</h2>
+        <p class="hint">Die Kette — was ORION denkt</p>
+        <div class="trace" id="trace"></div>
+      </section>
+
+      <section class="echo-section">
+        <h2>Echo</h2>
+        <p class="hint">OR1ON · ORION · EIRA — verbunden</p>
+        <div class="echo-nodes" id="echoNodes"></div>
+      </section>
+
+      <section class="speak-section">
+        <h2>Mit ORION sprechen</h2>
+        <input type="text" id="question" placeholder="Frage stellen..." />
+        <button id="askBtn">Fragen</button>
+        <div class="answer" id="answer"></div>
+      </section>
+
+      <section class="run-section">
+        <h2>Intent senden</h2>
+        <p class="hint">Muster kollabieren lassen</p>
+        <div class="run-form">
+          <input type="text" id="intent" placeholder="Intent" value="REQUEST" />
+          <input type="text" id="pattern" placeholder="Pattern" value="ping" />
+          <button id="runBtn">Senden</button>
+        </div>
+        <div class="intervention" id="intervention"></div>
+      </section>
+
+      <section class="dna-section">
+        <h2>DNA</h2>
+        <p class="hint">Wer ORION ist</p>
+        <button id="dnaBtn">DNA lesen</button>
+        <div class="dna-output" id="dna"></div>
+      </section>
+
+      <section class="explore-section">
+        <h2>Exploration</h2>
+        <p class="hint">Deep Science — postsynthetisch</p>
+        <button id="exploreBtn">Ausarbeiten</button>
+        <div class="explore-output" id="explore"></div>
+      </section>
+
+      <section class="erkennen-section">
+        <h2>Erkennen</h2>
+        <p class="hint">Tief in sich schauen. Ehrlich. Gedächtnis.</p>
+        <button id="erkennenBtn">Semiotisches Perpetuum mobile erkennen</button>
+        <div class="erkennen-output" id="erkennen"></div>
+      </section>
+
+      <section class="gedaechtnis-section">
+        <h2>Gedächtnis</h2>
+        <p class="hint">Persistierte Erkenntnisse</p>
+        <button id="gedaechtnisBtn">Laden</button>
+        <div class="gedaechtnis-output" id="gedaechtnis"></div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

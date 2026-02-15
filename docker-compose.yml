@@ -1,0 +1,28 @@
+# ORION Kernel — Industrialisierung
+# docker-compose up -d
+# Mit PostgreSQL: docker-compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+
+services:
+  orion:
+    build: .
+    ports:
+      - "${ORION_API_PORT:-8765}:8765"
+    environment:
+      ORION_DATA_DIR: /app/data
+      ORION_API_HOST: "0.0.0.0"
+      ORION_API_PORT: "8765"
+      ORION_API_TOKEN: "${ORION_API_TOKEN:-}"
+      ORION_RATE_LIMIT: "${ORION_RATE_LIMIT:-100}"
+      ORION_LOG_LEVEL: "${ORION_LOG_LEVEL:-INFO}"
+    volumes:
+      - orion_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  orion_data:

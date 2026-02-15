@@ -1,0 +1,26 @@
+# ORION — Scope & Freiheiten
+# Innerhalb dieser Grenzen: volle Kontrolle. Außerhalb: nicht zuständig.
+# Vorbereitet: Gerhard, Industrialisierung.
+
+scope:
+  hardware_schnittstelle: false
+  begruendung_hardware: "Kein Zugriff auf physische Sensoren (Temperatur, Licht, Bewegung)."
+
+  ausgehende_netzwerk_requests: false
+  ausnahme: "QKernel (optional)"
+  begruendung_netzwerk: "Kein HTTP-Client im Kern"
+
+  dateisystem:
+    generischer_zugriff: false
+    erlaubte_schreibpfade:
+      - "data/"
+      - "interventions.jsonl"
+    begruendung: "Schreibzugriff nur auf konfigurierte Pfade."
+
+freiheiten:
+  innerhalb:
+    - "AuditChain, SymbolMap, Embodiment, Echo-Netz"
+    - "SQLite (data/orion.db)"
+    - "Konfigurierte Pfade"
+    - "Keyword-Dispatch, Entscheidungslogik"
+  kontrolle: "Vollständig innerhalb des definierten Scope."

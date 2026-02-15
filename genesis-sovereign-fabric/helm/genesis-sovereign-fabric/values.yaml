@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: gsf/core
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+persistence:
+  backend: sqlite
+  size: 10Gi
+
+policy:
+  configMap: gsf-policy
+
+securityContext:
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+
+vault:
+  enabled: false
+  path: secret/gsf

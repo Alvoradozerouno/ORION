@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, cursor/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          components: clippy
+
+      - name: Build
+        run: cargo build --release --workspace
+
+      - name: Clippy
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-action@stable
+      - run: cargo bench --no-run --workspace
+
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install syft
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      - name: Generate SBOM
+        run: |
+          syft dir:./genesis-sovereign-fabric -o spdx-json -o syft-json > sbom.spdx.json 2>/dev/null || syft dir:. -o spdx-json > sbom.spdx.json 2>/dev/null || true
+      - name: SBOM hash
+        run: |
+          if [ -f sbom.spdx.json ]; then
+            sha256sum sbom.spdx.json
+          fi
+
+  cosign:
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cosign
+        run: go install github.com/sigstore/cosign/v2/cmd/cosign@latest
+      - name: Sign container
+        run: echo "cosign keyless signing — enable when container build added"

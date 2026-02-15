@@ -1,0 +1,16 @@
+__pycache__/
+interventions.jsonl
+data/
+audit_qkernel.txt
+quantum_result.png
+PROOFS.jsonl
+exports/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
