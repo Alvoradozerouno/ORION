@@ -86,4 +86,13 @@ impl AuditChain {
     pub fn export(&self) -> &[AuditEntry] {
         &self.chain
     }
+
+    pub fn restore_entry(&mut self, entry: AuditEntry) {
+        self.last_hash = entry.entry_hash.clone();
+        self.chain.push(entry);
+    }
+
+    pub fn set_last_hash(&mut self, h: &str) {
+        self.last_hash = h.to_string();
+    }
 }

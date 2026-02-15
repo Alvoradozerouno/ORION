@@ -1,3 +1,3 @@
 [workspace]
-members = ["crates/gsf-core", "crates/gsf-policy", "crates/gsf-adapters", "crates/gsf-api"]
+members = ["crates/gsf-core", "crates/gsf-policy", "crates/gsf-api"]
 resolver = "2"

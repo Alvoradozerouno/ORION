@@ -1,9 +1,7 @@
-//! Policy DSL Parser & Enforcement
+//! Policy DSL — YAML-based, scope, invariants, rules
 
-pub fn parse_policy(_yaml: &str) -> Result<(), String> {
-    Ok(())
-}
+mod action;
+mod policy;
 
-pub fn check_scope(_action: &str) -> bool {
-    true
-}
+pub use action::{Action, Decision};
+pub use policy::{check, parse_policy, Invariante, Policy, Rule, Scope};

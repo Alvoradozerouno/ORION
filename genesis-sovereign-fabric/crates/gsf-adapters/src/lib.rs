@@ -1,5 +1,7 @@
-//! LLM Adapter Layer — OpenAI, Llama, Anthropic austauschbar
+//! LLM Adapter Layer — OpenAI, Local. Pluggable.
 
-pub trait LLMAdapter: Send + Sync {
-    fn complete(&self, prompt: &str, temperature: f32) -> Result<String, String>;
-}
+mod trait_;
+mod openai;
+
+pub use trait_::LLMAdapter;
+pub use openai::OpenAIAdapter;

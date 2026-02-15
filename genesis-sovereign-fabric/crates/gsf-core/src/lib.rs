@@ -1,10 +1,16 @@
 //! GENESIS SOVEREIGN FABRIC — Core
-//! AuditChain, SymbolMap, Workflow Engine
+//! Deterministic Workflow, AuditChain, SymbolMap, Persistence, Signed Ledger
 
 pub mod audit_chain;
+pub mod error;
+pub mod ledger;
+pub mod persistence;
 pub mod symbol_map;
 pub mod workflow_engine;
 
 pub use audit_chain::{AuditChain, AuditEntry, GENESIS_ANCHOR};
+pub use error::{GsfError, Result};
+pub use ledger::{LedgerSigner, SignedEntry};
+pub use persistence::Persistence;
 pub use symbol_map::{Symbol, SymbolMap};
 pub use workflow_engine::WorkflowEngine;

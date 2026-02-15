@@ -50,4 +50,10 @@ impl SymbolMap {
             .get(pattern)
             .and_then(|id| self.symbols.get(id))
     }
+
+    pub fn restore_symbol(&mut self, s: Symbol) {
+        self.pattern_to_id
+            .insert(s.pattern.clone(), s.id.clone());
+        self.symbols.insert(s.id.clone(), s);
+    }
 }
