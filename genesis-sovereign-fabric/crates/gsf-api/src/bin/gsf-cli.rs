@@ -1,7 +1,11 @@
 //! GSF CLI — replay, verify
 
-use gsf_core::{replay, Persistence, WorkflowEngine, GENESIS_ANCHOR};
+use gsf_core::{replay, AuditEntry, Persistence, WorkflowEngine, GENESIS_ANCHOR};
 use std::path::PathBuf;
+
+fn skip_verify(_: &AuditEntry) -> bool {
+    true
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
@@ -45,7 +49,7 @@ fn cmd_replay(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     } else {
         &to
     };
-    let states = replay(&chain, &from, to_hash);
+    let states = replay(&chain, &from, to_hash, GENESIS_ANCHOR, Some(skip_verify))?;
     println!("{}", serde_json::to_string_pretty(&states)?);
     Ok(())
 }
