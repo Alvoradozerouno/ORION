@@ -30,3 +30,10 @@
 - Kernel is not compromised
 - Secrets are in Vault or ENV
 - No dynamic code execution
+
+## Policy Enforcement
+
+- Policy check before every /run request
+- Denied requests: 403, entry appended with decision=denied
+- Policy loaded from GSF_POLICY_PATH or config/policy.dsl
+- Cannot bypass: check() is called in request path

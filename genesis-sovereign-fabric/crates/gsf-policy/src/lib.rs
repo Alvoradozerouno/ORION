@@ -4,4 +4,4 @@ mod action;
 mod policy;
 
 pub use action::{Action, Decision};
-pub use policy::{check, parse_policy, Invariante, Policy, Rule, Scope};
+pub use policy::{check, load_policy, parse_policy, policy_hash, Invariante, Policy, Rule, Scope};

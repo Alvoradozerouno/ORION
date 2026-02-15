@@ -1,7 +1,8 @@
-//! Policy DSL parser and runtime check
+//! Policy DSL parser and runtime check — cannot be bypassed
 
 use crate::action::{Action, Decision};
 use serde::Deserialize;
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Policy {
@@ -74,36 +75,65 @@ pub struct Rule {
     pub temperature_max: Option<f32>,
 }
 
+/// Compute policy hash for audit
+pub fn policy_hash(yaml: &str) -> String {
+    hex::encode(Sha256::digest(yaml.as_bytes()))
+}
+
 /// Parse policy from YAML string
 pub fn parse_policy(yaml: &str) -> Result<Policy, String> {
     serde_yaml::from_str(yaml).map_err(|e| e.to_string())
 }
 
-/// Runtime action check — returns Allow or Deny(reason)
-pub fn check(action: &Action, policy: &Policy) -> Decision {
-    if !policy.scope.hardware && action.intent.contains("hardware") {
-        return Decision::Deny("hardware not in scope".to_string());
+/// Load policy from path — ConfigMap or local file
+pub fn load_policy(path: &std::path::Path) -> Result<(Policy, String), String> {
+    let yaml = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let policy = parse_policy(&yaml)?;
+    let hash = policy_hash(&yaml);
+    Ok((policy, hash))
+}
+
+/// Runtime action check — returns Allow or Deny. Cannot be bypassed.
+/// policy_hash: from load_policy() or policy_hash(yaml)
+pub fn check(action: &Action, policy: &Policy, policy_hash: &str) -> Decision {
+    if !policy.scope.hardware && action.intent.to_lowercase().contains("hardware") {
+        return Decision::Deny {
+            reason: "hardware not in scope".to_string(),
+            policy_hash: policy_hash.to_string(),
+        };
     }
-    if !policy.scope.network_outbound && action.network_target.is_some() {
-        return Decision::Deny("network_outbound not in scope".to_string());
+    if !policy.scope.network_outbound && action.network_access.is_some() {
+        return Decision::Deny {
+            reason: "network_outbound not in scope".to_string(),
+            policy_hash: policy_hash.to_string(),
+        };
     }
     if !policy.scope.adapter_invocation && action.adapter_invocation {
-        return Decision::Deny("adapter_invocation not in scope".to_string());
+        return Decision::Deny {
+            reason: "adapter_invocation not in scope".to_string(),
+            policy_hash: policy_hash.to_string(),
+        };
     }
-    if let Some(ref path) = action.filesystem_path {
+    if let Some(ref path) = action.fs_access {
         let allowed = policy
             .scope
             .fs_write_paths
             .iter()
             .any(|p| path.starts_with(p));
         if !allowed {
-            return Decision::Deny(format!("path {} not in fs_write_paths", path));
+            return Decision::Deny {
+                reason: format!("path {} not in fs_write_paths", path),
+                policy_hash: policy_hash.to_string(),
+            };
         }
     }
     let combined = format!("{} {}", action.intent, action.pattern).to_lowercase();
     for blocked in &policy.invariante.blocked_patterns {
         if combined.contains(&blocked.to_lowercase()) && policy.invariante.deny_on_match {
-            return Decision::Deny(format!("blocked pattern: {}", blocked));
+            return Decision::Deny {
+                reason: format!("blocked pattern: {}", blocked),
+                policy_hash: policy_hash.to_string(),
+            };
         }
     }
     Decision::Allow

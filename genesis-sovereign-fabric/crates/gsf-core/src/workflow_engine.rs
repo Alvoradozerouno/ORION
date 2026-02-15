@@ -44,6 +44,9 @@ impl WorkflowEngine {
             sym_map.restore_symbol(s);
         }
 
+        if !audit.verify() {
+            return Err(crate::error::GsfError::ChainVerificationFailed);
+        }
         self.audit_chain = audit;
         self.symbol_map = sym_map;
         self.persistence = Some(p);
@@ -86,5 +89,17 @@ impl WorkflowEngine {
             .unwrap_or_else(|| "no_collapse".to_string());
         let entry = self.append_event(intent, pattern, &signal, None)?;
         Ok(entry.entry_hash)
+    }
+
+    /// Append denied entry — policy rejected. Still audited and signed.
+    pub fn append_denied(
+        &mut self,
+        intent: &str,
+        pattern: &str,
+        reason: &str,
+        policy_hash: &str,
+    ) -> Result<AuditEntry> {
+        let outcome = format!("denied|{}|{}", reason, policy_hash);
+        self.append_event(intent, pattern, "denied", Some(&outcome))
     }
 }
