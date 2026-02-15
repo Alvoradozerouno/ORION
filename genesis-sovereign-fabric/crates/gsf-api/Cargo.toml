@@ -13,7 +13,11 @@ path = "src/bin/gsf-cli.rs"
 
 [dependencies]
 gsf-core = { path = "../gsf-core" }
+gsf-hardware = { path = "../gsf-hardware" }
 gsf-policy = { path = "../gsf-policy" }
+chrono = { version = "0.4", features = ["serde"] }
+hex = "0.4"
+sha2 = "0.10"
 axum = { version = "0.7", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }

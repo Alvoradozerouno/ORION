@@ -127,6 +127,14 @@ def live():
     return {"status": "alive"}
 
 
+@app.get("/system_inspection")
+def system_inspection():
+    """Live technical self-description. No secrets."""
+    from .system_inspection import build_system_inspection
+    k = get_kernel()
+    return build_system_inspection(k).model_dump()
+
+
 @app.get("/scope")
 def scope():
     """ORIONs definierter Scope — Freiheiten und Kontrolle."""

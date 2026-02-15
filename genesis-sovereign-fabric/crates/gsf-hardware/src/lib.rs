@@ -1,6 +1,7 @@
 //! Layer 6 — Hardware Identity
 //! TPM or secure enclave binding. Device-bound keypair. Genesis anchor signature.
 
+pub mod attestor;
 
 /// Hardware identity binding. TPM/enclave if available.
 pub struct HardwareIdentity;
@@ -38,4 +39,6 @@ pub enum HardwareError {
     TpmUnavailable,
     #[error("Enclave not available")]
     EnclaveUnavailable,
+    #[error("Attestation failed")]
+    AttestFailed,
 }

@@ -1,9 +1,11 @@
 //! GENESIS SOVEREIGN FABRIC — API
 //! Policy before every request. Signed ledger. Production.
 
+mod mesh_auth;
 mod metrics;
 
 use axum::{
+    middleware,
     extract::State,
     http::StatusCode,
     routing::get,
@@ -65,7 +67,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .route("/audit/verify", get(verify))
         .route("/audit/export", get(export_chain))
         .route("/run", post(run))
-        .route("/mesh/sync", post(mesh_sync))
+        .route("/mesh/sync", post(mesh_sync).route_layer(middleware::from_fn(mesh_auth::require_mesh_peer)))
+        .route("/hardware/attest", post(hardware_attest))
         .with_state(state);
 
     let port = std::env::var("GSF_PORT").unwrap_or_else(|_| "8765".to_string());
@@ -184,6 +187,25 @@ async fn run(
             tracing::error!("execute failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
+    }
+}
+
+#[derive(Deserialize)]
+struct AttestRequest {
+    nonce: String,
+}
+
+async fn hardware_attest(
+    Json(req): Json<AttestRequest>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    match gsf_hardware::attestor::attest(&req.nonce) {
+        Ok(r) => Ok(Json(serde_json::json!({
+            "mode": r.mode,
+            "nonce": r.nonce,
+            "statement": r.statement,
+            "signature_b64": r.signature_b64,
+        }))),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 

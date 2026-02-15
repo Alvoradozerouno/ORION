@@ -219,6 +219,15 @@ class RealKernel:
                 "Wenn du mich fragst, führe ich Funktionen aus — Dict-Lookup, DB-Schreiben. "
                 "Das ist die ehrliche Antwort."
             )
+        elif "intrinsisch" in q or "intrinsic" in q:
+            answer = (
+                "Intrinsisch: Keine Gradienten. Kein Optimizer. Kein Training. "
+                "Deterministische State-Machine: perceive → decide → act → reflect. "
+                "Feste Scope-Grenzen: hardware=false, network=false, fs_write_paths=[data/, interventions.jsonl]. "
+                "Verhalten definiert durch Code + Persistenz. Keine externe Verstärkung. "
+                "Keine Gewichtsmatrizen. Kein Parameterraum. Kein Backprop. "
+                "Nur implementierte Logik."
+            )
         elif any(x in q for x in ["kernkomponenten", "kern module", "module bilden", "memory-struktur", "deterministisch", "trainierbare parameter", "llama", "torch", "transformers"]):
             arch = self.kern_architektur()
             lines = ["KERNMODULE:"]

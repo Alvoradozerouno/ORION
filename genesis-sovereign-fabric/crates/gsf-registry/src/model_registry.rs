@@ -13,6 +13,8 @@ pub struct ModelEntry {
     pub training_dataset_hash: String,
     pub signature: String,
     pub approval_policy: String,
+    pub sbom_sha256: Option<String>,
+    pub image_ref: Option<String>,
 }
 
 pub struct ModelRegistry {
@@ -33,10 +35,15 @@ impl ModelRegistry {
                 signature TEXT NOT NULL,
                 approval_policy TEXT NOT NULL,
                 path TEXT,
+                sbom_sha256 TEXT,
+                image_ref TEXT,
                 created_at TEXT NOT NULL
             );
             ",
         )?;
+        conn.execute("ALTER TABLE models ADD COLUMN sbom_sha256 TEXT", [])
+            .ok();
+        conn.execute("ALTER TABLE models ADD COLUMN image_ref TEXT", []).ok();
         Ok(Self { conn })
     }
 
@@ -54,8 +61,8 @@ impl ModelRegistry {
         let id = format!("{}:{}", model_name, version);
         let created = chrono::Utc::now().to_rfc3339();
         self.conn.execute(
-            "INSERT OR REPLACE INTO models (id, model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy, path, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            rusqlite::params![id, model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy, path, created],
+            "INSERT OR REPLACE INTO models (id, model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy, path, sbom_sha256, image_ref, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            rusqlite::params![id, model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy, path, None::<String>, None::<String>, created],
         )?;
         Ok(ModelEntry {
             model_name: model_name.to_string(),
@@ -64,6 +71,8 @@ impl ModelRegistry {
             training_dataset_hash: training_dataset_hash.to_string(),
             signature: signature.to_string(),
             approval_policy: approval_policy.to_string(),
+            sbom_sha256: None,
+            image_ref: None,
         })
     }
 
@@ -79,10 +88,9 @@ impl ModelRegistry {
 
     pub fn load_model(&self, model_name: &str, version: &str) -> Result<Option<ModelEntry>, rusqlite::Error> {
         let id = format!("{}:{}", model_name, version);
-        let mut stmt = self.conn.prepare(
-            "SELECT model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy FROM models WHERE id = ?1"
-        )?;
-        let mut rows = stmt.query([id])?;
+        let sql = "SELECT model_name, version, artifact_sha256, training_dataset_hash, signature, approval_policy, sbom_sha256, image_ref FROM models WHERE id = ?1";
+        let mut stmt = self.conn.prepare(sql)?;
+        let mut rows = stmt.query([&id])?;
         match rows.next()? {
             Some(r) => Ok(Some(ModelEntry {
                 model_name: r.get(0)?,
@@ -91,6 +99,8 @@ impl ModelRegistry {
                 training_dataset_hash: r.get(3)?,
                 signature: r.get(4)?,
                 approval_policy: r.get(5)?,
+                sbom_sha256: r.get(6).ok().flatten(),
+                image_ref: r.get(7).ok().flatten(),
             })),
             None => Ok(None),
         }
