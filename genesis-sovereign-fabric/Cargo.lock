@@ -514,6 +514,7 @@ dependencies = [
  "base64",
  "ed25519-dalek",
  "gsf-core",
+ "gsf-euaiact",
  "gsf-hardware",
  "gsf-mesh",
  "gsf-observability",
@@ -551,6 +552,18 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "gsf-euaiact"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "sha2",
  "thiserror",
 ]
 
@@ -602,6 +615,7 @@ dependencies = [
 name = "gsf-registry"
 version = "0.1.0"
 dependencies = [
+ "gsf-euaiact",
  "parking_lot",
  "serde",
  "serde_json",

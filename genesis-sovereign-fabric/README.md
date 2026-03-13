@@ -41,6 +41,25 @@ result = client.execute("run", {"domain": "test"})
 chain = client.export_chain()
 ```
 
+## EU AI Act Compliance (gsf-euaiact)
+
+- **Risk Classification** (Article 6, Annex III): Unacceptable, High, Limited, Minimal
+- **Human Oversight** (Article 14): Human-in-the-loop, Human-on-the-loop, Human-in-command
+- **Technical Documentation** (Annex IV): Structure for high-risk systems
+- **Transparency** (Chapter IV): End-user disclosure, interaction notices
+- **Fundamental Rights Impact** (Article 29): Impact assessment structure
+
+### API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /oversight/submit` | Submit action for human approval |
+| `POST /oversight/approve` | Approve pending decision (executes) |
+| `POST /oversight/halt` | Halt/override pending decision |
+| `GET /oversight/pending` | List pending decisions |
+| `POST /registry/register` | Register model with risk level, Annex III category |
+| `POST /euaiact/disclosure` | Get end-user disclosure for risk level |
+
 ## Genesis Anchor
 
 ```

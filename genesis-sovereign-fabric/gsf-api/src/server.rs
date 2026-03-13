@@ -33,6 +33,8 @@ pub async fn run_server(addr: SocketAddr) {
         policy: Arc::new(default_policy()),
         peer_allowlist: Arc::new(PeerAllowlist::from_env("GSF_PEER_ALLOWLIST")),
         enclave: Arc::new(EnclaveAbstraction::new()),
+        oversight: Arc::new(gsf_euaiact::OversightState::new()),
+        registry: Arc::new(gsf_registry::ModelRegistry::new()),
     };
 
     let app = create_router(state);

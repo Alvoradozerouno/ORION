@@ -7,6 +7,7 @@ members = [
     "gsf-registry",
     "gsf-hardware",
     "gsf-observability",
+    "gsf-euaiact",
     "gsf-api",
     "gsf-cli",
 ]

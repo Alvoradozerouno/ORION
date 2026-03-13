@@ -1,3 +1,4 @@
+use gsf_euaiact::{AnnexIIICategory, RiskLevel};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -10,6 +11,8 @@ pub struct ModelEntry {
     pub version: String,
     pub sbom_hash: String,
     pub governance_flags: Vec<String>,
+    pub risk_level: RiskLevel,
+    pub annex_iii_category: Option<AnnexIIICategory>,
     pub locked: bool,
 }
 
@@ -19,6 +22,8 @@ pub enum RegistryError {
     NotFound(String),
     #[error("version locked")]
     VersionLocked,
+    #[error("registration prohibited: AI system classified as unacceptable risk")]
+    Prohibited,
 }
 
 #[derive(Debug, Default)]
@@ -39,6 +44,7 @@ impl ModelRegistry {
         version: String,
         sbom_hash: String,
         governance_flags: Vec<String>,
+        annex_iii_category: Option<AnnexIIICategory>,
     ) -> Result<ModelEntry, RegistryError> {
         let key = format!("{}@{}", id, version);
         let entry = self.models.read().get(&key).cloned();
@@ -48,11 +54,18 @@ impl ModelRegistry {
             }
         }
 
+        let risk_level = gsf_euaiact::classify_risk(&governance_flags, annex_iii_category.clone());
+        if risk_level == RiskLevel::Unacceptable {
+            return Err(RegistryError::Prohibited);
+        }
+
         let model = ModelEntry {
             id: id.clone(),
             version: version.clone(),
             sbom_hash: sbom_hash.clone(),
             governance_flags: governance_flags.clone(),
+            risk_level,
+            annex_iii_category,
             locked: false,
         };
         self.models.write().insert(key, model.clone());
